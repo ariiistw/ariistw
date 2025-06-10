@@ -1,3 +1,73 @@
+import os
+import requests
+import sys
+import time
+import platform
+import json
+from datetime import datetime # <- Tambahkan import ini
+from urllib.parse import quote
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.constants import ChatAction
+
+# Nama file untuk menyimpan konfigurasi (token dan nama bot)
+CONFIG_FILE = "config_ai_bot.json"
+
+# ANSI escape sequences for colors and styles (tetap sama)
+class Colors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    RESET = '\033[0m'
+    # Warna baru untuk logging
+    LOG_USER = '\033[93m'  # Kuning untuk pesan user
+    LOG_BOT = '\033[96m'   # Cyan untuk balasan bot
+
+def clear_console():
+    os.system('cls' if platform.system() == 'Windows' else 'clear')
+
+def slow_print(text, delay=0.03):
+    for c in text:
+        sys.stdout.write(c)
+        sys.stdout.flush()
+        time.sleep(delay)
+    print()
+
+# --- Fungsi-fungsi setup (get_bot_info, set_bot_description, dll) tetap sama ---
+# (Saya singkat di sini agar tidak terlalu panjang, tidak ada perubahan di bagian ini)
+
+def get_bot_info(token):
+    url = f"https://api.telegram.org/bot{token}/getMe"
+    try:
+        response = requests.get(url, timeout=10)
+        if response.status_code == 200:
+            result = response.json()
+            if result.get("ok"):
+                return result.get("result")
+        return None
+    except requests.RequestException:
+        return None
+
+def set_bot_description(token, bot_name):
+    description = f"🤖 Halo! Saya {bot_name}, asisten AI pribadi Anda. Kirimkan saya pesan apa saja, dan saya akan merespons dengan cerdas!"
+    url = f"https://api.telegram.org/bot{token}/setMyDescription"
+    data = {"description": description}
+    try:
+        response = requests.post(url, json=data, timeout=10)
+        return response.json().get("ok", False)
+    except requests.RequestException:
+        return False
+
+def prompt_token():
+    return input(f"{Colors.BOLD}{Colors.OKCYAN}Masukkan API Bot Token Telegram Anda: {Colors.RESET}").strip()
+
+def prompt_bot_name():
+    return input(f"{Colors.BOLD}{Colors.OKCYAN}Masukkan Nama untuk Asisten AI Anda (contoh: Jarvis): {Colors.RESET}").strip()
 
 def print_banner():
     banner = f"""
